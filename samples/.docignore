@@ -1,0 +1,68 @@
+# .docignore — arquivos e pastas ignorados pelo doc-gen
+# Sintaxe idêntica ao .gitignore
+
+# Dependências
+node_modules/
+vendor/
+packages/
+
+# Build outputs
+bin/
+obj/
+dist/
+build/
+out/
+target/
+*.min.js
+*.min.css
+
+# Testes
+tests/
+test/
+__tests__/
+spec/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Assets e mídia
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.pdf
+*.zip
+
+# Cache e temporários
+.cache/
+.tmp/
+*.log
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDEs
+.vs/
+.idea/
+.vscode/
+*.user
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Infraestrutura
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Arquivos do próprio doc-gen
+ARCHITECTURE_MEMORY.md
+.doc_state.json
+.doc_gen_log.json

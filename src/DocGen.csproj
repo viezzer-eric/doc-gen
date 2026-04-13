@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>doc-gen</AssemblyName>
+    <RootNamespace>DocGen</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>doc-gen</ToolCommandName>
+    <Version>0.1.0</Version>
+    <Description>DocAi — documentação de arquitetura gerada e mantida por IA</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Anthropic.SDK" Version="4.0.0" />
+	<PackageReference Include="LibGit2Sharp" Version="0.30.0" />
+    <PackageReference Include="Markdig" Version="0.38.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+</Project>

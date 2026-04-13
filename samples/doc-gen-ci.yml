@@ -1,0 +1,43 @@
+name: Arquitetura Viva — atualização automática
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # permite disparo manual
+
+jobs:
+  update-architecture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # necessário para o auto-commit
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # histórico completo para o diff
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Instalar doc-gen
+        run: dotnet tool install --global doc-gen --version 0.1.0
+        # Alternativa durante desenvolvimento:
+        # run: dotnet tool install --global --add-source ./nupkg doc-gen
+
+      - name: Atualizar documentação
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          doc-gen update \
+            --repo . \
+            --json \
+            --auto-commit
+
+      - name: Push changes
+        run: |
+          git config user.name  "doc-gen[bot]"
+          git config user.email "doc-gen@users.noreply.github.com"
+          git push || echo "Nada para enviar"
