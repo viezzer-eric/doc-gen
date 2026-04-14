@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -19,9 +19,13 @@
 		<PackageReference Include="Anthropic.SDK" Version="4.0.0" />
 		<PackageReference Include="LibGit2Sharp" Version="0.30.0" />
 		<PackageReference Include="Markdig" Version="0.38.0" />
+		<PackageReference Include="Microsoft.TeamFoundationServer.ExtendedClient" Version="20.256.2" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 		<PackageReference Include="itext7" Version="8.0.5" />
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.5" />
+		<PackageReference Include="Markdig" Version="0.37.0" />
+		<PackageReference Include="itext7" Version="8.0.4" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.4" />
 	</ItemGroup>
 
 </Project>
