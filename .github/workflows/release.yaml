@@ -46,7 +46,7 @@ jobs:
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
-  create-release:
+ create-release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -61,12 +61,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Organiza os binários em um formato para download
+          # Cria uma pasta para cada plataforma em vez de misturar tudo
           mkdir -p ./release
-          cp -r ./artifacts/bin-*/* ./release/
           
-          # Cria a Release no GitHub com os binários
+          # Move e renomeia os artefatos mantendo a separação
+          cp -r ./artifacts/bin-ubuntu-latest ./release/doc-gen-linux
+          cp -r ./artifacts/bin-windows-latest ./release/doc-gen-windows
+          cp -r ./artifacts/bin-macos-latest   ./release/doc-gen-macos
+          
+          # Cria a Release enviando as pastas separadas
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --notes "Automated release for ${{ github.ref_name }}" \
-            ./release/*
+            ./release/doc-gen-linux/* \
+            ./release/doc-gen-windows/* \
+            ./release/doc-gen-macos/*
