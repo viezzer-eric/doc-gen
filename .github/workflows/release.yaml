@@ -46,7 +46,7 @@ jobs:
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
- create-release:
+  create-release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -61,18 +61,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Cria uma pasta para cada plataforma em vez de misturar tudo
-          mkdir -p ./release
+          # Cria pasta temporária para organizar
+          mkdir -p ./release_assets
+          # Move os arquivos para pastas individuais para evitar sobrescrita
+          cp -r ./artifacts/bin-ubuntu-latest/* ./release_assets/
+          # Compacta para um único arquivo por plataforma para facilitar o download
+          cd ./release_assets && tar -czvf ../doc-gen-linux.tar.gz . && cd ..
+          # Remove arquivos soltos e limpa para a próxima plataforma
+          rm -rf ./release_assets/*
           
-          # Move e renomeia os artefatos mantendo a separação
-          cp -r ./artifacts/bin-ubuntu-latest ./release/doc-gen-linux
-          cp -r ./artifacts/bin-windows-latest ./release/doc-gen-windows
-          cp -r ./artifacts/bin-macos-latest   ./release/doc-gen-macos
+          cp -r ./artifacts/bin-windows-latest/* ./release_assets/
+          cd ./release_assets && zip -r ../doc-gen-windows.zip . && cd ..
+          rm -rf ./release_assets/*
           
-          # Cria a Release enviando as pastas separadas
+          cp -r ./artifacts/bin-macos-latest/* ./release_assets/
+          cd ./release_assets && tar -czvf ../doc-gen-macos.tar.gz . && cd ..
+          
+          # Cria a Release no GitHub
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --notes "Automated release for ${{ github.ref_name }}" \
-            ./release/doc-gen-linux/* \
-            ./release/doc-gen-windows/* \
-            ./release/doc-gen-macos/*
+            doc-gen-linux.tar.gz doc-gen-windows.zip doc-gen-macos.tar.gz
