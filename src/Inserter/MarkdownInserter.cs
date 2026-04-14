@@ -1,23 +1,31 @@
 using DocGen.Models;
+using DocGen.Pdf;
 using Markdig;
 
 namespace DocGen.Inserter;
 
 public class MarkdownInserter
 {
-    private const string DocFile = "ARCHITECTURE_MEMORY.md";
-    private const string AutoStart   = "<!-- AUTO:START -->";
-    private const string AutoEnd     = "<!-- AUTO:END -->";
-    private const string ManualStart  = "<!-- MANUAL:START -->";
-    private const string ManualEnd    = "<!-- MANUAL:END -->";
+    private const string DocGenFolder = ".docgen";
+    private const string DocFile = ".docgen/ARCHITECTURE_MEMORY.md";
+    private const string PdfFile = "ARCHITECTURE_MEMORY.pdf";
+    private const string AutoStart = "<!-- AUTO:START -->";
+    private const string AutoEnd = "<!-- AUTO:END -->";
+    private const string ManualStart = "<!-- MANUAL:START -->";
+    private const string ManualEnd = "<!-- MANUAL:END -->";
 
     private readonly string _repoPath;
+    private readonly string _docGenPath;
     private static readonly MarkdownPipeline Pipeline =
         new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     public MarkdownInserter(string repoPath)
     {
         _repoPath = Path.GetFullPath(repoPath);
+        _docGenPath = Path.Combine(_repoPath, DocGenFolder);
+
+        if (!Directory.Exists(_docGenPath))
+            Directory.CreateDirectory(_docGenPath);
     }
 
     // ─── Public API ───────────────────────────────────────────────────────────
@@ -31,6 +39,7 @@ public class MarkdownInserter
         bool dryRun = false)
     {
         var docPath = Path.Combine(_repoPath, DocFile);
+        var pdfPath = Path.Combine(_docGenPath, PdfFile);
 
         if (!File.Exists(docPath))
             return (false, $"Arquivo não encontrado: {docPath}");
@@ -64,6 +73,7 @@ public class MarkdownInserter
         try
         {
             await File.WriteAllTextAsync(docPath, updated);
+            await PdfGenerator.GeneratePdfAsync(updated, pdfPath);
             File.Delete(backupPath);
             return (true, null);
         }
@@ -82,6 +92,7 @@ public class MarkdownInserter
     public async Task WriteBootstrapAsync(string fullContent, bool dryRun = false)
     {
         var docPath = Path.Combine(_repoPath, DocFile);
+        var pdfPath = Path.Combine(_docGenPath, PdfFile);
 
         if (dryRun)
         {
@@ -92,6 +103,7 @@ public class MarkdownInserter
         }
 
         await File.WriteAllTextAsync(docPath, fullContent);
+        await PdfGenerator.GeneratePdfAsync(fullContent, pdfPath);
     }
 
     // ─── Section Replacement ──────────────────────────────────────────────────
@@ -113,7 +125,7 @@ public class MarkdownInserter
             hasAnyAutoSection = true;
 
             var before = result[..(startIdx + AutoStart.Length)];
-            var after  = result[endIdx..];
+            var after = result[endIdx..];
             result = before + "\n" + newContent + "\n" + after;
 
             // Only replace the first AUTO block — if there are multiple, they all get the same content
@@ -150,7 +162,7 @@ public class MarkdownInserter
     private static bool ManualSectionsIntact(string original, string updated)
     {
         var originalManual = ExtractAllBetween(original, ManualStart, ManualEnd);
-        var updatedManual  = ExtractAllBetween(updated,  ManualStart, ManualEnd);
+        var updatedManual = ExtractAllBetween(updated, ManualStart, ManualEnd);
 
         if (originalManual.Count != updatedManual.Count) return false;
 
@@ -181,14 +193,14 @@ public class MarkdownInserter
     private static void ShowDiff(string original, string updated)
     {
         var origLines = original.Split('\n');
-        var newLines  = updated.Split('\n');
+        var newLines = updated.Split('\n');
 
         // Simple unified diff for console
         var maxLines = Math.Max(origLines.Length, newLines.Length);
         for (int i = 0; i < maxLines; i++)
         {
             var orig = i < origLines.Length ? origLines[i] : null;
-            var next = i < newLines.Length  ? newLines[i]  : null;
+            var next = i < newLines.Length ? newLines[i] : null;
 
             if (orig == next) continue;
 

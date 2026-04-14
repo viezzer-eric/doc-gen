@@ -9,13 +9,20 @@ namespace DocGen.Scanner;
 public class RepositoryScanner
 {
     private readonly string _repoPath;
+    private readonly string _docGenPath;
     private readonly HashSet<string> _ignorePatterns;
-    private const string StateFile = ".doc_state.json";
+    private const string DocGenFolder = ".docgen";
+    private const string StateFile = "state.json";
     private const string IgnoreFile = ".docignore";
 
     public RepositoryScanner(string repoPath)
     {
         _repoPath = Path.GetFullPath(repoPath);
+        _docGenPath = Path.Combine(_repoPath, DocGenFolder);
+
+        if (!Directory.Exists(_docGenPath))
+            Directory.CreateDirectory(_docGenPath);
+
         _ignorePatterns = LoadIgnorePatterns();
     }
 
@@ -43,7 +50,7 @@ public class RepositoryScanner
 
     public async Task<DocState> LoadStateAsync()
     {
-        var statePath = Path.Combine(_repoPath, StateFile);
+        var statePath = Path.Combine(_docGenPath, StateFile);
         if (!File.Exists(statePath))
             return new DocState();
 
@@ -54,7 +61,7 @@ public class RepositoryScanner
 
     public async Task SaveStateAsync(DocState state)
     {
-        var statePath = Path.Combine(_repoPath, StateFile);
+        var statePath = Path.Combine(_docGenPath, StateFile);
         var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(statePath, json);
     }
@@ -184,7 +191,7 @@ public class RepositoryScanner
         {
             "node_modules", "bin", "obj", ".git", ".vs", ".idea",
             "dist", "build", "out", "coverage", "__pycache__",
-            ".doc_state.json", ".doc_gen_log.json", "ARCHITECTURE_MEMORY.md"
+            ".docgen"
         };
 
         var ignorePath = Path.Combine(_repoPath, IgnoreFile);

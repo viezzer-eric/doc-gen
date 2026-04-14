@@ -5,21 +5,22 @@ namespace DocGen.Aggregator;
 
 public class ContextAggregator(string repoPath)
 {
-    private const string DocFile = "ARCHITECTURE_MEMORY.md";
+    private const string DocGenFolder = ".docgen";
+    private const string DocFile = ".docgen/ARCHITECTURE_MEMORY.md";
 
     // Section delimiters
-    private const string AutoStart  = "<!-- AUTO:START -->";
-    private const string AutoEnd    = "<!-- AUTO:END -->";
+    private const string AutoStart = "<!-- AUTO:START -->";
+    private const string AutoEnd = "<!-- AUTO:END -->";
     private const string ManualStart = "<!-- MANUAL:START -->";
-    private const string ManualEnd   = "<!-- MANUAL:END -->";
+    private const string ManualEnd = "<!-- MANUAL:END -->";
 
-    private readonly string _repoPath = Path.GetFullPath(repoPath);
+    private readonly string _docGenPath = Path.Combine(Path.GetFullPath(repoPath), DocGenFolder);
 
     // ─── Public API ───────────────────────────────────────────────────────────
 
     public async Task<AggregatedContext> BuildContextAsync(RepoDelta delta)
     {
-        var docPath = Path.Combine(_repoPath, DocFile);
+        var docPath = Path.Combine(_docGenPath, DocFile);
         var fullDoc = File.Exists(docPath)
             ? await File.ReadAllTextAsync(docPath)
             : string.Empty;
@@ -37,7 +38,7 @@ public class ContextAggregator(string repoPath)
 
     public async Task<string> ReadFullDocumentAsync()
     {
-        var docPath = Path.Combine(_repoPath, DocFile);
+        var docPath = Path.Combine(_docGenPath, DocFile);
         return File.Exists(docPath)
             ? await File.ReadAllTextAsync(docPath)
             : string.Empty;
@@ -50,7 +51,7 @@ public class ContextAggregator(string repoPath)
         if (string.IsNullOrEmpty(content))
             return (string.Empty, string.Empty);
 
-        var autoContent  = ExtractSections(content, AutoStart, AutoEnd);
+        var autoContent = ExtractSections(content, AutoStart, AutoEnd);
         var manualContent = ExtractSections(content, ManualStart, ManualEnd);
 
         return (autoContent, manualContent);
@@ -94,7 +95,7 @@ public class ContextAggregator(string repoPath)
 
             Gere um documento Markdown estruturado com as seguintes seções dentro das tags <!-- AUTO:START --> e <!-- AUTO:END -->:
 
-            1. **Visão Geral** — O que este projeto faz
+            1. **Visão Geral** — Qual o objetivo desse projeto e como pode ser usado
             2. **Stack Tecnológico** — Linguagens, frameworks, principais dependências
             3. **Estrutura de Módulos** — Como o código está organizado
             4. **Fluxo Principal** — Como os componentes se comunicam
@@ -148,7 +149,7 @@ public class ContextAggregator(string repoPath)
     private static IEnumerable<string> ScanRelevantFiles(string repoPath)
     {
         var skip = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "node_modules", "bin", "obj", ".git", "dist", "build", "__pycache__" };
+        { "node_modules", "bin", "obj", ".git", "dist", "build", "__pycache__", ".docgen" };
 
         return Directory
             .EnumerateFiles(repoPath, "*", SearchOption.AllDirectories)

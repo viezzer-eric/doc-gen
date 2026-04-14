@@ -164,7 +164,7 @@ public class GeminiEngine : IPromptEngine
     private readonly string _apiKey;
 
     // gemini-1.5-flash → gratuito (60 req/min, 1M tokens/dia)
-    private const string Model = "gemini-2.5-flash";
+    private const string Model = "gemini-3.5-flash";
     private const string ApiUrl =
         "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}";
 

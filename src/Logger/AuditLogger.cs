@@ -5,14 +5,19 @@ namespace DocGen.Logger;
 
 public class AuditLogger
 {
-    private const string LogFile = ".doc_gen_log.json";
+    private const string DocGenFolder = ".docgen";
+    private const string LogFile = "audit.json";
     private const int MaxEntries = 500;
 
     private readonly string _logPath;
 
     public AuditLogger(string repoPath)
     {
-        _logPath = Path.Combine(Path.GetFullPath(repoPath), LogFile);
+        var docGenPath = Path.Combine(Path.GetFullPath(repoPath), DocGenFolder);
+        if (!Directory.Exists(docGenPath))
+            Directory.CreateDirectory(docGenPath);
+
+        _logPath = Path.Combine(docGenPath, LogFile);
     }
 
     public async Task LogAsync(LogEntry entry)
@@ -50,16 +55,16 @@ public class AuditLogger
         string result,
         SynthesisResult? synthesis = null,
         string? error = null) => new()
-    {
-        Timestamp = DateTime.UtcNow.ToString("o"),
-        HashBefore = hashBefore,
-        HashAfter = hashAfter,
-        Result = result,
-        TokensUsed = synthesis?.TokensUsed ?? 0,
-        CommitsProcessed = 0,
-        BreakingChanges = synthesis?.BreakingChanges.Count ?? 0,
-        NewFeatures = synthesis?.NewFeatures.Count ?? 0,
-        Refactors = synthesis?.Refactors.Count ?? 0,
-        Error = error
-    };
+        {
+            Timestamp = DateTime.UtcNow.ToString("o"),
+            HashBefore = hashBefore,
+            HashAfter = hashAfter,
+            Result = result,
+            TokensUsed = synthesis?.TokensUsed ?? 0,
+            CommitsProcessed = 0,
+            BreakingChanges = synthesis?.BreakingChanges.Count ?? 0,
+            NewFeatures = synthesis?.NewFeatures.Count ?? 0,
+            Refactors = synthesis?.Refactors.Count ?? 0,
+            Error = error
+        };
 }

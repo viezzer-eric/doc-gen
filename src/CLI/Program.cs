@@ -36,8 +36,8 @@ var autoCommitOption = new Option<bool>(
 
 var providerOption = new Option<string>(
     ["--provider", "-p"],
-    getDefaultValue: () => "gemini",
-    description: "Provider de IA: gemini (grátis) | anthropic");
+    getDefaultValue: () => "anthropic",
+    description: "Provider de IA: anthropic | gemini");
 
 // ─── init command ─────────────────────────────────────────────────────────────
 
