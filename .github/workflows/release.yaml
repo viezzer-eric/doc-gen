@@ -35,14 +35,24 @@ jobs:
         shell: bash
         run: |
           cd ./dist
+          # Detecta o executável (prioriza .exe no windows, ou qualquer binário no linux/mac)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            mv doc-gen.exe doc-gen-${{ matrix.rid }}.exe
-            echo "ARTIFACT=doc-gen-${{ matrix.rid }}.exe" >> $GITHUB_ENV
+            ARTIFACT_FILE=$(ls *.exe | head -n 1)
+            TARGET_NAME="doc-gen-${{ matrix.rid }}.exe"
           else
-            mv doc-gen doc-gen-${{ matrix.rid }}
-            chmod +x doc-gen-${{ matrix.rid }}
-            echo "ARTIFACT=doc-gen-${{ matrix.rid }}" >> $GITHUB_ENV
+            # Encontra o arquivo executável que não é um script nem dll
+            ARTIFACT_FILE=$(find . -maxdepth 1 -type f -perm /111 ! -name "*.dll" ! -name "*.so" ! -name "*.dylib" | head -n 1 | sed 's|^\./||')
+            TARGET_NAME="doc-gen-${{ matrix.rid }}"
           fi
+
+          if [ -z "$ARTIFACT_FILE" ]; then
+            echo "Erro: Nenhum executável encontrado em ./dist"
+            ls -la
+            exit 1
+          fi
+
+          mv "$ARTIFACT_FILE" "$TARGET_NAME"
+          echo "ARTIFACT=$TARGET_NAME" >> $GITHUB_ENV
         
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
