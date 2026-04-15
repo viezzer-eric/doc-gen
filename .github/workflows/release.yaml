@@ -103,13 +103,13 @@ jobs:
         with:
           path: ./artifacts
 
-      - name: Create Release
+      - name: Upload to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} \
-            --title "Release ${{ github.ref_name }}" \
-            --notes "Binários para Linux, Windows e macOS" \
+          # Tenta criar a release, se existir (erro), apenas faz o upload dos arquivos
+          gh release upload ${{ github.ref_name }} \
             ./artifacts/doc-gen-linux-x64/doc-gen-linux-x64 \
             ./artifacts/doc-gen-win-x64/doc-gen-win-x64.exe \
-            ./artifacts/doc-gen-osx-x64/doc-gen-osx-x64
+            ./artifacts/doc-gen-osx-x64/doc-gen-osx-x64 \
+            --clobber
