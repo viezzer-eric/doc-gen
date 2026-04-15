@@ -35,13 +35,19 @@ jobs:
         shell: bash
         run: |
           cd ./dist
-          # Detecta o executável (prioriza .exe no windows, ou qualquer binário no linux/mac)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
             ARTIFACT_FILE=$(ls *.exe | head -n 1)
             TARGET_NAME="doc-gen-${{ matrix.rid }}.exe"
           else
-            # Encontra o arquivo executável que não é um script nem dll
-            ARTIFACT_FILE=$(find . -maxdepth 1 -type f -perm /111 ! -name "*.dll" ! -name "*.so" ! -name "*.dylib" | head -n 1 | sed 's|^\./||')
+            ARTIFACT_FILE=""
+            for f in *; do
+              if [ -f "$f" ] && [[ "$f" != *.dll && "$f" != *.so && "$f" != *.dylib ]]; then
+                if [ -x "$f" ]; then
+                  ARTIFACT_FILE="$f"
+                  break
+                fi
+              fi
+            done
             TARGET_NAME="doc-gen-${{ matrix.rid }}"
           fi
 
@@ -52,6 +58,9 @@ jobs:
           fi
 
           mv "$ARTIFACT_FILE" "$TARGET_NAME"
+          if [ "${{ matrix.os }}" != "windows-latest" ]; then
+            chmod +x "$TARGET_NAME"
+          fi
           echo "ARTIFACT=$TARGET_NAME" >> $GITHUB_ENV
         
       - name: Upload Artifacts
