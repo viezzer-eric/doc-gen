@@ -6,14 +6,15 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
-		<Version>1.13.0</Version>
+		<Version>1.14.0</Version>
 		<PackageId>DocGenCli</PackageId>
 		<Title>DocGen CLI</Title>
 		<Authors>Eric Viezzer</Authors>
 		<Description>Ferramenta de documentação de arquitetura via IA.</Description>
 		<PackageTags>documentation;ai;architecture;cli</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-
+		<RollForward>LatestMajor</RollForward>
+		
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IsPackable>true</IsPackable>
