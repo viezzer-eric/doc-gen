@@ -8,36 +8,57 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: doc-gen-linux-x64
+          - os: windows-latest
+            rid: win-x64
+            artifact: doc-gen-win-x64.exe
+          - os: macos-latest
+            rid: osx-x64
+            artifact: doc-gen-osx-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
           
       - name: Build & Publish
-        run: dotnet publish -c Release -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || matrix.os == 'windows-latest' && 'win-x64' || 'osx-x64' }} --output ./dist
+        run: dotnet publish src/DocGen.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true --output ./dist
+        
+      - name: Rename Binary
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            mv ./dist/doc-gen.exe ./dist/${{ matrix.artifact }}
+          else
+            mv ./dist/doc-gen ./dist/${{ matrix.artifact }}
+            chmod +x ./dist/${{ matrix.artifact }}
+          fi
         
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bin-${{ matrix.os }}
-          path: ./dist
+          name: ${{ matrix.artifact }}
+          path: ./dist/${{ matrix.artifact }}
 
   push-nuget:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Pack Tool
-        run: dotnet pack -c Release --output ./nupkg
+        run: dotnet pack src/DocGen.csproj -c Release --output ./nupkg
 
       - name: Push to NuGet
         run: |
@@ -61,24 +82,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Cria pasta temporária para organizar
-          mkdir -p ./release_assets
-          # Move os arquivos para pastas individuais para evitar sobrescrita
-          cp -r ./artifacts/bin-ubuntu-latest/* ./release_assets/
-          # Compacta para um único arquivo por plataforma para facilitar o download
-          cd ./release_assets && tar -czvf ../doc-gen-linux.tar.gz . && cd ..
-          # Remove arquivos soltos e limpa para a próxima plataforma
-          rm -rf ./release_assets/*
-          
-          cp -r ./artifacts/bin-windows-latest/* ./release_assets/
-          cd ./release_assets && zip -r ../doc-gen-windows.zip . && cd ..
-          rm -rf ./release_assets/*
-          
-          cp -r ./artifacts/bin-macos-latest/* ./release_assets/
-          cd ./release_assets && tar -czvf ../doc-gen-macos.tar.gz . && cd ..
-          
-          # Cria a Release no GitHub
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --notes "Automated release for ${{ github.ref_name }}" \
-            doc-gen-linux.tar.gz doc-gen-windows.zip doc-gen-macos.tar.gz
+            ./artifacts/doc-gen-linux-x64/doc-gen-linux-x64 \
+            ./artifacts/doc-gen-win-x64.exe/doc-gen-win-x64.exe \
+            ./artifacts/doc-gen-osx-x64/doc-gen-osx-x64
