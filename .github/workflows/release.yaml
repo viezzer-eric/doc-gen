@@ -35,13 +35,23 @@ jobs:
         shell: bash
         run: |
           cd ./dist
-          # Detecta o executável (prioriza .exe no windows, ou qualquer binário no linux/mac)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            ARTIFACT_FILE=$(ls *.exe | head -n 1)
+            # Windows: busca pelo executável .exe
+            ARTIFACT_FILE=$(ls *.exe 2>/dev/null | head -n 1)
             TARGET_NAME="doc-gen-${{ matrix.rid }}.exe"
           else
-            # Encontra o arquivo executável que não é um script nem dll
-            ARTIFACT_FILE=$(find . -maxdepth 1 -type f -perm /111 ! -name "*.dll" ! -name "*.so" ! -name "*.dylib" | head -n 1 | sed 's|^\./||')
+            # Unix (Linux/macOS): Loop POSIX para encontrar o executável
+            ARTIFACT_FILE=""
+            for f in *; do
+              # Pula se não for arquivo ou se for biblioteca dinâmica
+              if [ -f "$f" ] && [[ "$f" != *.dll && "$f" != *.so && "$f" != *.dylib ]]; then
+                # Verifica se é executável (POSIX puro)
+                if [ -x "$f" ]; then
+                  ARTIFACT_FILE="$f"
+                  break
+                fi
+              fi
+            done
             TARGET_NAME="doc-gen-${{ matrix.rid }}"
           fi
 
