@@ -11,13 +11,10 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
-            artifact: doc-gen-linux-x64
           - os: windows-latest
             rid: win-x64
-            artifact: doc-gen-win-x64.exe
           - os: macos-latest
             rid: osx-x64
-            artifact: doc-gen-osx-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -28,23 +25,30 @@ jobs:
           dotnet-version: 8.0.x
           
       - name: Build & Publish
-        run: dotnet publish src/DocGen.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true --output ./dist
+        run: dotnet publish src/DocGen.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true --output ./dist
         
-      - name: Rename Binary
+      - name: List dist
+        shell: bash
+        run: ls -la ./dist
+        
+      - name: Prepare artifact
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            mv ./dist/doc-gen.exe ./dist/${{ matrix.artifact }}
+          cd ./dist
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            mv doc-gen.exe doc-gen-${{ matrix.rid }}.exe
+            echo "ARTIFACT=doc-gen-${{ matrix.rid }}.exe" >> $GITHUB_ENV
           else
-            mv ./dist/doc-gen ./dist/${{ matrix.artifact }}
-            chmod +x ./dist/${{ matrix.artifact }}
+            mv doc-gen doc-gen-${{ matrix.rid }}
+            chmod +x doc-gen-${{ matrix.rid }}
+            echo "ARTIFACT=doc-gen-${{ matrix.rid }}" >> $GITHUB_ENV
           fi
         
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: ./dist/${{ matrix.artifact }}
+          name: doc-gen-${{ matrix.rid }}
+          path: ./dist/${{ env.ARTIFACT }}
 
   push-nuget:
     needs: build
@@ -84,7 +88,7 @@ jobs:
         run: |
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
-            --notes "Automated release for ${{ github.ref_name }}" \
+            --notes "Binários para Linux, Windows e macOS" \
             ./artifacts/doc-gen-linux-x64/doc-gen-linux-x64 \
-            ./artifacts/doc-gen-win-x64.exe/doc-gen-win-x64.exe \
+            ./artifacts/doc-gen-win-x64/doc-gen-win-x64.exe \
             ./artifacts/doc-gen-osx-x64/doc-gen-osx-x64
