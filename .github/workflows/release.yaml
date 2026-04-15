@@ -35,23 +35,13 @@ jobs:
         shell: bash
         run: |
           cd ./dist
+          # Detecta o executável (prioriza .exe no windows, ou qualquer binário no linux/mac)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            # Windows: busca pelo executável .exe
-            ARTIFACT_FILE=$(ls *.exe 2>/dev/null | head -n 1)
+            ARTIFACT_FILE=$(ls *.exe | head -n 1)
             TARGET_NAME="doc-gen-${{ matrix.rid }}.exe"
           else
-            # Unix (Linux/macOS): Loop POSIX para encontrar o executável
-            ARTIFACT_FILE=""
-            for f in *; do
-              # Pula se não for arquivo ou se for biblioteca dinâmica
-              if [ -f "$f" ] && [[ "$f" != *.dll && "$f" != *.so && "$f" != *.dylib ]]; then
-                # Verifica se é executável (POSIX puro)
-                if [ -x "$f" ]; then
-                  ARTIFACT_FILE="$f"
-                  break
-                fi
-              fi
-            done
+            # Encontra o arquivo executável que não é um script nem dll
+            ARTIFACT_FILE=$(find . -maxdepth 1 -type f -perm /111 ! -name "*.dll" ! -name "*.so" ! -name "*.dylib" | head -n 1 | sed 's|^\./||')
             TARGET_NAME="doc-gen-${{ matrix.rid }}"
           fi
 
@@ -97,11 +87,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
-          
+
       - name: Create Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
