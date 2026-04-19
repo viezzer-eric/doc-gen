@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
-		<Version>2.2.0</Version>
+		<Version>2.3.0</Version>
 		<PackageId>DocGenCli</PackageId>
 		<Title>DocGen CLI</Title>
 		<Authors>Eric Viezzer</Authors>
